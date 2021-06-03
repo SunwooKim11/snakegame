@@ -11,13 +11,13 @@ Snake::Snake(LOC& head, int length): head(head), life(1){
 void Snake::setDirection(char key){
     // 진행방향과 같은 입력이 들어오면 무시
     if (direct == key) return;
-    if (direct == opposite) return;
+    if (key == opposite) return;
 
     switch (key){
-    case 'a': opposite = 'd'; inc = {0, -1}; break;
-    case 'w': opposite = 's'; inc = {1, 0}; break;
-    case 's': opposite = 'w'; inc = {-1, 0}; break;
-    case 'd': opposite = 'a'; inc = {0, 1}; break;
+    case 'a': direct='a'; opposite = 'd'; inc = {0, -1}; break;
+    case 'w': direct='w'; opposite = 's'; inc = {-1, 0}; break;
+    case 's': direct='s'; opposite = 'w'; inc = {1, 0}; break;
+    case 'd': direct='d'; opposite = 'a'; inc = {0, 1}; break;
     default: break;
     }
 }
@@ -28,14 +28,13 @@ void Snake::move(){
     body.pop_back();
     head.y += inc.y; head.x += inc.x;
     
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
 
 bool Snake::isDumpedBody(){
     std::vector<LOC>::iterator it = body.begin();
     for(it; it<body.end(); it++){
-        if(head !=*it) return true;
+        if(head ==*it) return true;
     }
     return false;
 }

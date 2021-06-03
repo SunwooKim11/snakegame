@@ -1,20 +1,11 @@
 #include <iostream>
 #include <ncurses.h>
 #include <clocale>
-// #include <thread>
+#include <thread>
 // #include <mutex>
 #include "LOC.h"
 #include "map.h"
 #include "Snake.h"
-
-// const int WALL = 1;
-// const int IMWALL = 2;
-// const int HEAD = 3;
-// const int BODY = 4;
-// const int GROWTH_ITEM = 5;
-// const int POISON_ITEM = 6;
-// const int GATE = 7;
-// const int BACK_GROUND = 8;
 
 void init_config(Map& map, Snake& snake){
     resize_term(25, 120);
@@ -34,7 +25,9 @@ void init_config(Map& map, Snake& snake){
     keypad(stdscr, TRUE);
 
     //getch 할때 기다리지 않음
-    // nodelay(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+
+    cbreak();
 }
 
 void displayUpdate(WINDOW *display, Map& map, Snake& snake){
@@ -74,21 +67,23 @@ int main(){
     LOC center = {map1.size_y/2, map1.size_x/2};
     Snake snake(center, 3);
     WINDOW *display = subwin(stdscr, map1.size_y, map1.size_x, 1, 1);
-    int key = 'a';
+    int key;
     
 
     init_config(map1, snake);
 
-    displayUpdate(display, map1, snake);
+    // displayUpdate(display, map1, snake);
     // std::thread tick(&Snake::move);
     while(!(snake.isFailed(map1, key))){
-        key = getch();
-        snake.setDirection(key);
+        if((key = getch()) != ERR) snake.setDirection(key);
         snake.move();
         displayUpdate(display, map1, snake);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         if(key == 'q') break;
     }
     // if(tick.joinable()) tick.join();
+
+    // key = getch();
 
     delwin(display);
     endwin();
