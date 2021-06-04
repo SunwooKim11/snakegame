@@ -16,7 +16,7 @@ public:
     char direct;
     char opposite;
     LOC inc;
-    int life;
+    int length;
     const int HEAD = 3;
     const int BODY = 4;
 public:
@@ -26,6 +26,10 @@ public:
     // move functions
     void setDirection(char key);
     void move();
+
+    // event functions: get Item
+    void grow(LOC& item_loc);
+    void shrink(LOC& item_loc);
 
     // check fail condition
 private:

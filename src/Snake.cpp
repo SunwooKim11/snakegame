@@ -1,6 +1,6 @@
 #include "Snake.h"
 
-Snake::Snake(LOC& head, int length): head(head), life(1){
+Snake::Snake(LOC& head, int length): head(head), length(length){
     direct = 'a';
     opposite = 'd';
     body.push_back(LOC {head[1], head[0]+1});
@@ -27,9 +27,18 @@ void Snake::move(){
     body.insert(body.begin(), head);
     body.pop_back();
     head.y += inc.y; head.x += inc.x;
-    
     }
 
+void Snake::grow(LOC& item_loc){
+    body.insert(body.begin(), head);
+    head = item_loc;
+    length++;
+}
+
+void Snake::shrink(LOC& item_loc){
+    body.pop_back();
+    length--;
+}
 
 bool Snake::isDumpedBody(){
     std::vector<LOC>::iterator it = body.begin();
@@ -41,7 +50,7 @@ bool Snake::isDumpedBody(){
 
 bool Snake::isDumpedWall(Map& map){
     //바깥 테두리에 걸릴 때
-    if(head[1]<=0 || head[1]>=map.size_y || head[0]<=0 || head[0]>=map.size_x) return true;
+    if(head[1]<=1 || head[1]>=map.size_y-1 || head[0]<=1 || head[0]>=map.size_x-1) return true;
     return false;
 }
 
@@ -51,7 +60,7 @@ bool Snake::pressedOps(char key){
 
 bool Snake::isFailed(Map& map, char key){
     if (isDumpedBody()|| isDumpedWall(map) || pressedOps(key)){
-        life = 0; return true;
+        length = -1; return true;
     }
     return false;
 }
