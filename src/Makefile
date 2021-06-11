@@ -6,7 +6,7 @@ CCFLAGS3 = -pthread
 all: main
 
 main: Snake.o Item.o main.o map.h LOC.h Item.h GrowthItem.h PoisonItem.h main.cpp Snake.cpp Item.cpp
-	$(CC) $(CCFLAGS1) -o $@ main.o Snake.o Item.o$(CCFLAGS2) 
+	$(CC) $(CCFLAGS1) -o $@ main.o Snake.o Item.o $(CCFLAGS2) $(CCFLAGS3)
 	
 clean:
 	rm -rf *.o
@@ -21,4 +21,4 @@ clean:
 	$(CC) $(CCFLAGS1) -c $< $(CCFLAGS2) $(CCFLAGS3)
 
 % : %.cpp
-	$(CC) $(CCFLAGS1) -o $@ $<
+	$(CC) $(CCFLAGS1) -o $@ $< $(CCFLAGS2) $(CCFLAGS3)

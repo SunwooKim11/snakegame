@@ -1,14 +1,14 @@
 #include "Item.h"
 
-Item::Item(Map& map, Snake& snake, bool active, milliseconds lifecycle, milliseconds hiddencycle): 
+Item::Item(Map& map, Snake& snake, bool active, int lifecycle, int hiddencycle): 
 loc({1,1}), active(active), lifecycle(lifecycle), hiddencycle(hiddencycle){
     toAvoid.insert(toAvoid.end(), &(map.imwalls[0]), &(map.imwalls[map.imw_size])); 
     toAvoid.insert(toAvoid.end(), &(map.walls[0]), &(map.walls[map.w_size]));    
-    outline = {map.size_y-1, map.size_x-1};
+    outline = LOC{map.size_y-1, map.size_x-1};
     num_blocks = toAvoid.end();
     insertToAvoid(snake);
-    srand(time(NULL));
-    tp = system_clock::now();
+    srand(2);
+    tp = steady_clock::now();
 }
 
 void Item::insertToAvoid(Snake& snake){
@@ -26,8 +26,9 @@ void Item::updateToAvoid(Snake& snake){
 }
 
 void Item::setLoc(){
+    // find로 찾았다면다시 loc 생성
     do{
-        loc = {rand()%outline[0]+1, rand()%outline[1]+1};
+        loc = LOC{rand()%outline.y+1, rand()%outline.x+1};
     }while(find(toAvoid.begin(), toAvoid.end(), loc)!=toAvoid.end());
 }
 
@@ -40,15 +41,23 @@ void Item::setLoc(){
 //     return false;
 // }
 
-void Item::setStatus(){
-    if(!(active) && // Item이 invisible한 상태일 때 
-    duration_cast<milliseconds>(system_clock::now()- tp).count() >= hiddencycle.count()){
-        active = true; setLoc(); tp = system_clock::now(); return;
+void Item::setStatus(Snake& snake){
+    bool eaten = beEaten(snake);
+
+    if((!active) && // Item이 invisible한 상태일 때 
+    (duration_cast<milliseconds>(steady_clock::now()-tp).count() > hiddencycle)){
+        active = true; 
+        tp = steady_clock::now(); 
+        setLoc();
+        return;
     }
-    if(active && // Item이 visible한 상태일 때
-    duration_cast<milliseconds>(system_clock::now()-tp).count()>= lifecycle.count()){
-        active = false; tp = system_clock::now(); return;
+
+
+    if(eaten || (active && // Item이 visible한 상태일 때
+    (duration_cast<milliseconds>(steady_clock::now()-tp).count() > lifecycle))){
+        active = false; 
+        tp = steady_clock::now();
+        return;
     }
 
 }
-

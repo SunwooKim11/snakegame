@@ -19,6 +19,7 @@ public:
     int length;
     const int HEAD = 3;
     const int BODY = 4;
+    LOC prev;
 public:
     //consturctor
     Snake(LOC& head, int length = 3);

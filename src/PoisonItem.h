@@ -9,18 +9,23 @@ public:
     const int POISON = 6;
 
 public:
-    PoisonItem(Map& map, Snake& snake, bool active=false, 
-    duration<milliseconds> lifecycle = duration_cast<duration<milliseconds>>(milliseconds(5000)),
-    duration<milliseconds> hiddencycle = duration_cast<duration<milliseconds>>(milliseconds(1500)));
+    PoisonItem(Map& map, Snake& snake)
+    :Item(map, snake)
+    {};
 
     bool beEaten(Snake& snake){
-        if(!active) return false;
         if(snake.head == loc){
             snake.shrink(loc);
+            return true;
         }
+        return false;
     }
 
     const int getColor(){return POISON;}
+
+    ~PoisonItem(){
+        // std::cout <<"~Poision Item" << std::endl;
+    }
 
 };
 #endif
