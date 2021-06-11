@@ -40,8 +40,8 @@ public:
         imwalls[2] = {size_y-1, size_x-1};
         imwalls[3] = {0, size_x-1};
         // 나머지
-        imwalls[4] = {22, 10};
-        imwalls[5] = {44, 7};
+        imwalls[4] = {10, 20};
+        imwalls[5] = {7, 44};
         
         // set walls
         int idx = 0;

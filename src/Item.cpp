@@ -7,8 +7,8 @@ loc({1,1}), active(active), lifecycle(lifecycle), hiddencycle(hiddencycle){
     outline = LOC{map.size_y-1, map.size_x-1};
     num_blocks = toAvoid.end();
     insertToAvoid(snake);
-    srand(2);
     tp = steady_clock::now();
+    srand(tp.time_since_epoch().count()%10000);
 }
 
 void Item::insertToAvoid(Snake& snake){
@@ -28,7 +28,12 @@ void Item::updateToAvoid(Snake& snake){
 void Item::setLoc(){
     // find로 찾았다면다시 loc 생성
     do{
-        loc = LOC{rand()%outline.y+1, rand()%outline.x+1};
+        //여기 해결 필요
+        int y = rand()%outline.y;
+        int x = rand()%outline.x;
+        y = (y) ? y: y+1;
+        x = (x) ? x: x+1;
+        loc = LOC{y, x};
     }while(find(toAvoid.begin(), toAvoid.end(), loc)!=toAvoid.end());
 }
 
@@ -43,7 +48,6 @@ void Item::setLoc(){
 
 void Item::setStatus(Snake& snake){
     bool eaten = beEaten(snake);
-
     if((!active) && // Item이 invisible한 상태일 때 
     (duration_cast<milliseconds>(steady_clock::now()-tp).count() > hiddencycle)){
         active = true; 
@@ -51,7 +55,6 @@ void Item::setStatus(Snake& snake){
         setLoc();
         return;
     }
-
 
     if(eaten || (active && // Item이 visible한 상태일 때
     (duration_cast<milliseconds>(steady_clock::now()-tp).count() > lifecycle))){

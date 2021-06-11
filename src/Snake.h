@@ -37,6 +37,7 @@ private:
     bool isDumpedBody();
     bool isDumpedWall(Map& map);
     bool pressedOps(char key);
+    bool headIn(LOC* blocks, int size);
 
 public:
     bool isFailed(Map& map, char key);

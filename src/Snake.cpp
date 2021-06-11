@@ -3,9 +3,10 @@
 Snake::Snake(LOC& head, int length): head(head), length(length){
     direct = 'a';
     opposite = 'd';
-    for(int i=1; i<length+1; i++){
+    for(int i=1; i<length; i++){
         body.push_back(LOC{head[1], head[0]+i});
     }
+    prev = LOC{head[1], head[0]+length};
     inc = {0, -1};
 }
 
@@ -54,6 +55,10 @@ bool Snake::isDumpedBody(){
 bool Snake::isDumpedWall(Map& map){
     //바깥 테두리에 걸릴 때
     if(head[1]<=1 || head[1]>=map.size_y-1 || head[0]<=1 || head[0]>=map.size_x-1) return true;
+    
+    // 맵 내무 벽에 걸릴 때
+    if(headIn(map.imwalls, map.imw_size) || headIn(map.walls, map.w_size)) return true;
+    
     return false;
 }
 
@@ -61,9 +66,14 @@ bool Snake::pressedOps(char key){
     return (key==opposite) ? true : false;
 }
 
+bool Snake::headIn(LOC* blocks, int size){
+    for(int i=0; i<size; i++) if(head==blocks[i]) return true;
+    return false;
+}
+
 bool Snake::isFailed(Map& map, char key){
     if (isDumpedBody()|| isDumpedWall(map) || pressedOps(key)|| length<3){
-        length = -1; return true;
+        return true;
     }
     return false;
 }

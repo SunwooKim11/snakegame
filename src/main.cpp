@@ -52,11 +52,11 @@ void displayUpdate(WINDOW *display, Map& map, Snake& snake, GrowthItem gItem, Po
     wattroff(display, COLOR_PAIR(map.WALL));
 
     wattron(display, COLOR_PAIR(map.IMWALL));
-    mvwprintw(display, 0, map.size_x-1, " ");
-    mvwprintw(display, map.size_y-1, 0, " ");
-    mvwprintw(display, map.size_y-1, map.size_x-1 ," ");
-    mvwprintw(display, 0, 0, " ");
-        for(int i=0; i<map.imw_size; i++){
+    // mvwprintw(display, 0, map.size_x-1, " ");
+    // mvwprintw(display, map.size_y-1, 0, " ");
+    // mvwprintw(display, map.size_y-1, map.size_x-1 ," ");
+    // mvwprintw(display, 0, 0, " ");
+    for(int i=0; i<map.imw_size; i++){
         mvwprintw(display, map.imwalls[i].y, map.imwalls[i].x, " ");
     }
     wattroff(display, COLOR_PAIR(map.IMWALL));
@@ -68,7 +68,7 @@ void displayUpdate(WINDOW *display, Map& map, Snake& snake, GrowthItem gItem, Po
     wattroff(display, COLOR_PAIR(snake.HEAD));
 
     wattron(display, COLOR_PAIR(snake.BODY));
-    for(std::vector<LOC>::iterator it = snake.body.begin(); it!=snake.body.end()-1; it++)
+    for(std::vector<LOC>::iterator it = snake.body.begin(); it!=snake.body.end(); it++)
         mvwprintw(display, (*it).y, (*it).x, " ");
     wattroff(display, COLOR_PAIR(snake.BODY));
 
@@ -92,16 +92,24 @@ void displayUpdate(WINDOW *display, Map& map, Snake& snake, GrowthItem gItem, Po
 void print_fail(WINDOW* display){
     init_pair(31, COLOR_RED, COLOR_RED);
     init_pair(32, COLOR_RED, COLOR_YELLOW);
-    mvwprintw(display, 18, 27, "      ");
-    mvwprintw(display, 19, 28, "fail");
-    mvwprintw(display, 20, 27, "      ");
+    
+    wattron(display, COLOR_PAIR(31));
+    mvwprintw(display, 15, 27, "      ");
+    mvwprintw(display, 17, 27, "      ");
+    wattroff(display, COLOR_PAIR(31));
+    wattron(display, COLOR_PAIR(32));
+    mvwprintw(display, 16, 28, "fail");
+    wattroff(display, COLOR_PAIR(32));
+
+    touchwin(display);
+    wrefresh(display);
 }
 int main(){
     initscr();
     // set variables 
     Map map1;
     LOC center = {map1.size_y/2, map1.size_x/2};
-    Snake snake(center, 4);
+    Snake snake(center, 3);
     WINDOW *display = subwin(stdscr, map1.size_y, map1.size_x, 1, 1);
     GrowthItem gItem(map1, snake);
     PoisonItem pItem(map1, snake);
@@ -118,6 +126,7 @@ int main(){
         snake.move();
         if(snake.isFailed(map1, key)){
             print_fail(display);
+            nodelay(stdscr, false);
             key = getch();
             break;
         }
