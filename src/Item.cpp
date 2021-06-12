@@ -1,23 +1,31 @@
 #include "Item.h"
 
-Item::Item(Map& map, Snake& snake, bool active, int lifecycle, int hiddencycle): 
-loc({1,1}), active(active), lifecycle(lifecycle), hiddencycle(hiddencycle){
-    toAvoid.insert(toAvoid.end(), &(map.imwalls[0]), &(map.imwalls[map.imw_size])); 
-    toAvoid.insert(toAvoid.end(), &(map.walls[0]), &(map.walls[map.w_size]));    
+Item::Item(Map& map, Snake& snake, bool active, int lifecycle, int hiddencycle)
+:lifecycle(lifecycle), hiddencycle(hiddencycle){
+    initialize(map, snake, active);
+    srand(tp.time_since_epoch().count()%10000);
+
+}
+
+void Item::initialize(Map& map, Snake& snake, bool active){
+    this->loc = {1, 1};
+    this->active = active;
+    toAvoid.clear();
+    toAvoid.insert(toAvoid.end(), map.imwalls, map.imwalls + map.imw_size); 
+    toAvoid.insert(toAvoid.end(), map.walls, map.walls + map.w_size);    
     outline = LOC{map.size_y-1, map.size_x-1};
     num_blocks = toAvoid.end();
     insertToAvoid(snake);
     tp = steady_clock::now();
-    srand(tp.time_since_epoch().count()%10000);
 }
 
 void Item::insertToAvoid(Snake& snake){
-    toAvoid.push_back(snake.head);
-    toAvoid.insert(toAvoid.end(), snake.body.begin(), snake.body.end());
+    toAvoid.push_back(snake.getHead());
+    toAvoid.insert(toAvoid.end(), snake.getBody().begin(), snake.getBody().end());
 }
 
 void Item::popToAvoid(Snake& snake){
-    toAvoid.erase(num_blocks, num_blocks+snake.length);
+    toAvoid.erase(num_blocks, num_blocks+snake.getLength());
 }
 
 void Item::updateToAvoid(Snake& snake){
@@ -27,6 +35,7 @@ void Item::updateToAvoid(Snake& snake){
 
 void Item::setLoc(){
     // find로 찾았다면다시 loc 생성
+    std::vector<LOC>::iterator tmp;
     do{
         //여기 해결 필요
         int y = rand()%outline.y;
@@ -34,12 +43,13 @@ void Item::setLoc(){
         y = (y) ? y: y+1;
         x = (x) ? x: x+1;
         loc = LOC{y, x};
-    }while(find(toAvoid.begin(), toAvoid.end(), loc)!=toAvoid.end());
+        tmp = find(toAvoid.begin(), toAvoid.end(), loc);
+    }while(toAvoid.end() == tmp);
 }
 
 // bool Item::beEaten(Snake& snake){
 //     if(!active) return false;
-//     if(snake.head == loc){
+//     if(snake.getHead() == loc){
 //         // snake.getItem(*this); 
 //         active=false;
 //     }

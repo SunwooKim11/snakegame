@@ -14,7 +14,7 @@ public:
     {};
 
     bool beEaten(Snake& snake){
-        if(snake.head == loc){
+        if(snake.getHead() == loc){
             snake.shrink(loc);
             return true;
         }
