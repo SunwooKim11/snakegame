@@ -1,11 +1,10 @@
-#include<iostream>
 #include<chrono>
 #include<cstdlib>
 #include<algorithm>
-#include<vector>
+#include<iterator>
 #include"LOC.h"
 #include"Snake.h"
-#include"map.h"
+#include"Map.h"
 
 using namespace std::chrono;
 
@@ -15,7 +14,7 @@ using namespace std::chrono;
 class Item{
 protected:
     LOC loc;
-    std::vector<LOC> toAvoid;
+    std::vector<LOC> toAvoid; // locations of imwalls, walls and snake
     int lifecycle;
     int hiddencycle;
     bool active;
@@ -27,31 +26,37 @@ public:
     // consturctor
     Item(Map& map, Snake& snake, bool active=false, 
     int lifecycle = milliseconds(10000).count(),
-    int hiddencycle = milliseconds(1500).count());
+    int hiddencycle = milliseconds(2000).count());
 
     // initializer
     void initialize(Map& map, Snake& snake, bool active = false);
 
-    // event handler
+    // event handler: 
+    // insert locations of current snake into toAvoid.
     void insertToAvoid(Snake& snake);
+    // remove locations of previous snake form toAvoid.
     void popToAvoid(Snake& snake);
+    // update toAvoid.
     void updateToAvoid(Snake& snake);
+    // set values(active, tp, loc) depending on event.
     void setStatus(Snake& snake);
 
-    // setter
+    // setter:
+    // set item loc
     void setLoc();
 
-    // getter
+    // getter:
     bool getActive(){return active;}
-    LOC& getLoc(){return loc;}
+    LOC getLoc(){return loc;}
 
-    // event function
+    // event function:
+    // dummy function for subclass event function
 virtual bool beEaten(Snake& snake){return true;};
+    // dummy function for getting subclass color
 virtual const int getColor(){return 1;};
+    // destructor
 virtual ~Item(){
         toAvoid.clear();
-        // std::cout <<"~Item" << std::endl;
-        // std::vector().swap(toAvoid);
     }
 };
 

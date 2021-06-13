@@ -5,30 +5,26 @@
 #include <mutex>
 #include <thread>
 #include "LOC.h"
-#include "map.h"
+#include "Map.h"
 #include "Snake.h"
 #include "Item.h"
 #include "GrowthItem.h"
 #include "PoisonItem.h"
 #include "Gate.h"
+// #include "BoardUpdate.h"
 
 using namespace std::chrono;
-void set_getch_option(bool isPlaying = TRUE){
-    //cursor no vision
-    curs_set(0);
-    //입력을 출력 x
-    noecho();
-    // 특수키 입력 가능 
-    keypad(stdscr, TRUE);
 
-    //getch 할때 기다리지 않음
-    nodelay(stdscr, isPlaying);
-
+void set_getch_option(WINDOW* display, bool isPlaying=TRUE){
+    // make user can input a special key
+    keypad(display, TRUE);
+    // make getch no blocking
+    nodelay(display, isPlaying);
     cbreak();
-}
+};
 
 void init_config(Map& map, Snake& snake, GrowthItem& gItem, PoisonItem& pItem, Gate& gate){
-    resize_term(25, 120);
+    resize_term(30, 120);
     start_color();
     //configue color_pair
     init_pair(map.BACK_GROUND, COLOR_YELLOW, COLOR_YELLOW);
@@ -39,12 +35,16 @@ void init_config(Map& map, Snake& snake, GrowthItem& gItem, PoisonItem& pItem, G
     init_pair(gItem.getColor(), COLOR_WHITE, COLOR_GREEN);
     init_pair(pItem.getColor(), COLOR_WHITE, COLOR_RED);
     init_pair(gate.getColor(), COLOR_MAGENTA, COLOR_MAGENTA);
-
-    set_getch_option();
+    //cursor no vision
+    curs_set(0);
+    // don't print input value.
+    noecho();
 }
 
+// redraw the entrie screen
 void displayUpdate(WINDOW *display, Map& map, Snake& snake, GrowthItem& gItem, PoisonItem& pItem, Gate& gate){
-
+    
+    werase(display);
     // background
     wbkgd(display, COLOR_PAIR(map.BACK_GROUND));
 
@@ -98,6 +98,7 @@ void displayUpdate(WINDOW *display, Map& map, Snake& snake, GrowthItem& gItem, P
     wrefresh(display);
 }
 
+// if fail, print fail in screen
 void print_fail(WINDOW* display){
     init_pair(31, COLOR_RED, COLOR_RED);
     init_pair(32, COLOR_RED, COLOR_YELLOW);
@@ -114,79 +115,69 @@ void print_fail(WINDOW* display){
     wrefresh(display);
 }
 
+// print start screen
 void print_start(){
-    attron(COLOR_PAIR(2));
     mvprintw(8, 34, "snake game");
     mvprintw(10, 30, "20203039 Kim SunWoo");
-    mvprintw(12,28, "Press r key to start");
-    attroff(COLOR_PAIR(2));
+    mvprintw(12, 29, "Press r key to start");
     touchwin(stdscr);
     refresh();
-
-    set_getch_option(FALSE);
     while(getch()!= 'r');
     mvprintw(8, 34, "          ");
     mvprintw(10, 30, "                   ");
-    mvprintw(12,28, "                      ");    
+    mvprintw(12, 29, "                      ");    
     touchwin(stdscr);
     refresh();
 }
 
 int main(){
     initscr();
-    print_start();
-    // set variables map.size = {21, 32}
+    // map.size is {21, 32}
     Map map;
     LOC center = {17, map.size_x/2};
     Snake snake(center, 3);
     WINDOW *display = subwin(stdscr, map.size_y, map.size_x, 1, 1);
-    // WINDOW *scoreBoard = subwin(stdscr, map.size_y/2, map.size_x, 1, map.size_x+10);
-    // WINDOW *missionBoard = subwin(stdscr, map.size_y/2, map.size_x, map.size_y + 5, map.size_x+10);
-
+    WINDOW *scoreBoard = subwin(stdscr, 10, map.size_x, 1, 37);
+    WINDOW *missionBoard = subwin(stdscr, 10, map.size_x, 13, 37);
     GrowthItem gItem(map, snake);
     PoisonItem pItem(map, snake);
     Gate gate;
-    // Item items[2] = {GrowthItem(map, snake), PoisonItem(map, snake)};
-    int key, stage;
-
-    // std::thread t1(boardUpdate);
+    
+    int key, stage=0;
 
     init_config(map, snake, gItem, pItem, gate);
+    set_getch_option(display);
+    print_start();
+    
+    // std::thread t1(boardUpdate(), scoreBoard, missionBoard, std::ref(snake), std::ref(stage));
 
-    // displayUpdate(display, map, snake);
-    // std::thread tick(&Snake::move);
     while(1){
-        if((key = getch()) != ERR) snake.control(key);
+        if((key = wgetch(display)) != ERR) snake.control(key);
+
         snake.move();
+        // if game fail call 'print_fail()'
         if(snake.isFailed(map, gate.getLoc1(), gate.getLoc2(), gate.getActive(), key)){
+            stage = 5;
             print_fail(display);
             nodelay(stdscr, false);
             key = getch();
             break;
         }
-        //Item
+        // handle Item
         gItem.updateToAvoid(snake);
         pItem.updateToAvoid(snake);
         gItem.setStatus(snake);
         pItem.setStatus(snake);
-        //gate 
+        // handle Gate 
         gate.setStatus(map, snake);
-        if(key == 'q') break;
+        // if users pressed 'q', end the program
+        if(key == 'q'){stage = 5; break;}
         displayUpdate(display, map, snake, gItem, pItem, gate);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-
-    // if(fail)
-    try{}
-    catch(...){
-        std::cout << "End Game";
-    }
     delwin(display);
+    // if(t1.joinable()){t1.join(); delwin(scoreBoard); delwin(missionBoard);}
     endwin();
-    try{}
-    catch(...){
-        std::cout << "End Game";
-    }
-    
+
     return 0;
 }

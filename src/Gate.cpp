@@ -1,48 +1,52 @@
 #include "Gate.h"
-
+//constructor:
 Gate::Gate(bool active, bool passing, int lifecycle, int hiddencycle)
 :active(active), passing(passing), lifecycle(lifecycle), hiddencycle(hiddencycle){}
 
+// initializer:
+// init active and passing
 void Gate::initialize(bool active, bool passing){
     this->active = active; this->passing = passing;
 }
 
+// handle status when snake enters the gate
 bool Gate::snakeEntered(Map& map, Snake& snake){
-    // 들어 오지 않았을 때
+    // when snake does not enter
     if(!(snake.getHead() == loc1 || snake.getHead() == loc2)){
         return false;
     }
 
-    // 들어 왔을 때
+    // when snake enters
     passing = true;
-    enteredSpace = snake.getBody()[0];
-    snake.setN_gate();
+    enteredSpace = snake.getBody()[0]; // the location of head just before snake enters the gate.
+    snake.setN_gate(); // increase snake.n_gate by one.
+    //set entrace, exit
     if(snake.getHead() == loc1){
         entrace = loc1; exit = loc2; 
     } else{
         entrace = loc2; exit = loc1;
     }
 
-    if(exit.x == 0){ // 왼쪽 테두리
+    if(exit.x == 0){ // exit on left outline
         snake.setHead({exit.y, exit.x+1});
         snake.setDirection('d', 'a', {0, 1});
     }
-    else if(exit.y == 0){ // 위쪽 테두리
+    else if(exit.y == 0){ // exit on up outline
         snake.setHead({exit.y+1, exit.x});
         snake.setDirection('s', 'w', {1, 0});
     }
-    else if(exit.x == map.size_x-1){ // 오른쪽 테두리
+    else if(exit.x == map.size_x-1){ // exit on right outline
         snake.setHead({exit.y, exit.x-1});
         snake.setDirection('a', 'd', {0, -1});
     }
-    else if(exit.y == map.size_y-1){ // 아래쪽 테두리
+    else if(exit.y == map.size_y-1){ // exit on down outline
         snake.setHead({exit.y-1, exit.x});
         snake.setDirection('w', 's', {-1, 0});
     }
-    else{ // 내부에 있을 때
+    else{ // exit on inner walls
       int idx1, idx2 = -1;
       LOC tmp;
-    // 방향을 알아차림
+    // get snake's entry direction
         switch(snake.getDirect()){
           case 'a': idx1 = 0; break;
           case 'w': idx1 = 1; break;
@@ -50,7 +54,7 @@ bool Gate::snakeEntered(Map& map, Snake& snake){
           case 's': idx1 = 3; break;
       }  
 
-    // 진출하는 곳이 벽이 아닐 때 까지 우선순위대로 진출하는 곳 결정
+    // decide where to exit in priority order until the entry point is not a wall
       do{
           tmp = EXIT_DIRECT[idx1][++idx2];
           snake.getHead() = exit+tmp;
@@ -60,19 +64,22 @@ bool Gate::snakeEntered(Map& map, Snake& snake){
     }
     return true;
 }
+
+// check if snake is going through the gate.
 bool Gate::snakePassing(Snake& snake){
     for(auto it = snake.getBody().begin(); it!=snake.getBody().end(); it++){
         if(enteredSpace == *it) return true;
     }   
     return false;
 }
-
+// set values(active, tp, loc) depending on event.
 void Gate::setStatus(Map& map, Snake& snake){
 
-    if((!active)&& //gate가 invisible한 상태 일 때,
+    if((!active)&& // when gate is invisible and time > hiddencycle and snake length > 4
     (duration_cast<milliseconds>(steady_clock::now()-tp).count() > hiddencycle)&&
     snake.getLength()>4    
     ){
+        // make item visible, update tp and loc.
         active = true; 
         tp = steady_clock::now(); 
         setLoc(map);    
@@ -82,34 +89,35 @@ void Gate::setStatus(Map& map, Snake& snake){
     passing = snakePassing(snake);
     if(passing) return;
 
-    if((active && // gate이 visible한 상태일 때
+    if((active && // when gate is visible and time > lifecycle
     (duration_cast<milliseconds>(steady_clock::now()-tp).count() > lifecycle))){
+        // make item invisible, update tp.
         active = false; 
         tp = steady_clock::now();
         return;
     }
 }
 
+// setter:
+// for not gates overlapping, if loc1 equals to loc1 repeat randomLOC()
 void Gate::setLoc(Map& map){
-    // 게이트가 겹치지 않도록, loc2와 loc1이 같으면 계속 randomLOC 실행
-
     loc1 = randomLOC(map);
     do{
         loc2 = randomLOC(map);
-        // std::cout << (loc1== loc2 )<< std::endl;
     }while(loc1 == loc2);
     return;
 }
 
 // private function
+// generate randoom loc
 LOC Gate::randomLOC(Map& map){
     int tmp = rand()%5;
     int x, y;
     LOC loc;
     switch(tmp){
-        case 0: // 내부 벽
+        case 0: // inner walls
             loc= map.walls[rand()%map.w_size]; break;
-        case 1: // 왼쪽 테두리
+        case 1: // left outline
             y = rand()%(map.size_y-1);
             loc= {(y)? y: y+1, 0};
             break;

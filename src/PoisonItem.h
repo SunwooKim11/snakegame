@@ -5,14 +5,15 @@
 
 class PoisonItem: public Item{
 
-public: 
+private: 
     const int POISON = 6;
 
 public:
     PoisonItem(Map& map, Snake& snake)
-    :Item(map, snake)
-    {};
-
+    :Item(map, snake){};
+    // event function:
+    // check if snake head equals to the location of poision item.
+    // and if true, make snake shrunk.
     bool beEaten(Snake& snake){
         if(snake.getHead() == loc){
             snake.shrink(loc);
@@ -23,9 +24,7 @@ public:
 
     const int getColor(){return POISON;}
 
-    ~PoisonItem(){
-        // std::cout <<"~Poision Item" << std::endl;
-    }
+    ~PoisonItem(){}
 
 };
 #endif
