@@ -20,7 +20,7 @@ struct LOC{
         return !(*this==ops);
     }
     
-    LOC& operator= (const LOC& loc){
+    void operator= (const LOC& loc){
         y = loc.y; x = loc.x;
     }
 
