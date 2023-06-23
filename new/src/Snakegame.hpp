@@ -1,35 +1,49 @@
 #pragma once 
 #include <ncurses.h>
 #include <iostream>
-#include "Board.hpp"
+#include "Gameboard.hpp"
+#include "Missionboard.hpp"
+#include "Scoreboard.hpp"
 #include "Drawable.hpp"
 #include "Apple.hpp"
+#include "Poison.hpp"
 #include "Empty.hpp"
 #include "Snake.hpp"
+
+
+#define SUB_DIMS 10
+#define SUB_ROWS SUB_DIMS
+#define SUB_COLS SUB_DIMS * 4
 
 class Snakegame
 {
 private:
-    Board board;
+    Gameboard game_board;
+    Scoreboard score_board;
+    Missionboard mission_board;
+    
     Apple *apple = nullptr;
+    Poison *poison = nullptr;
     bool game_over;
-    bool same_input;
     Snake snake;
     SnakePiece next = SnakePiece(1, 1);
 
 public:
-    Snakegame(int height, int width)
+    Snakegame()
     {
-        board = Board(height, width);
+        game_board = Gameboard();
+        score_board = Scoreboard(SUB_ROWS, SUB_COLS, 0, game_board.getEndX());
+        mission_board = Missionboard(SUB_ROWS, SUB_COLS, game_board.getEndY()-SUB_ROWS, game_board.getEndX());
+        
+    
         initialize();
     };
 
     void processInput()
     {
-        chtype input = board.getInput();
+        chtype input = game_board.getInput();
         // process input
         Direction direct = none;
-        same_input = false;
 
         switch (input)
         {
@@ -54,18 +68,14 @@ public:
             break;
 
         case 'p':
-            board.setTimeout(-1);
-            while(board.getInput()!='p');
-            board.setTimeout(500);
+            game_board.setTimeout(-1);
+            while(game_board.getInput()!='p');
+            game_board.setTimeout(500);
 
         default:
             break;
         }
-        if(snake.getCurrDirection()==direct)
-        {
-            same_input = true;
-        }
-        else if(direct)
+        if(direct)
         {
             game_over=snake.setDirection(direct);
         }        
@@ -73,14 +83,16 @@ public:
 
     void updateState()
     {
-        if(same_input) return;
         handleNextPiece(); 
         if(apple==nullptr) createApple(); 
+        if(poison==nullptr) createPoison(); 
     }
 
     void redraw()
     {   
-        board.refresh();
+        game_board.refresh();
+        score_board.redraw();
+        mission_board.redraw();
     }
 
     bool isOver()
@@ -92,26 +104,36 @@ public:
     ~Snakegame()
     {
         delete apple;
+        delete poison;
+        // delete &game_board;
+        // delete &game_board;
+        // delete &score_board;
+
     };
 
 private:
     void initialize()
     {
-        board.initialize();
+        game_board.initialize();
         game_over = false;
-        same_input = false;
         srand(time(NULL)); 
         // init snake
         snake.setDirection(down);
-        board.add(next);
+        game_board.add(next);
         snake.addPiece(next);
         
-        handleNextPiece();
-        handleNextPiece();
-        handleNextPiece();
-
+        next = snake.nextHead();
+        game_board.add(next);
+        snake.addPiece(next);
+        next = snake.nextHead();
+        game_board.add(next);
+        snake.addPiece(next);
         
         if(apple==nullptr) createApple(); 
+        if(poison==nullptr) createPoison(); 
+
+        score_board.initialize();
+        mission_board.initialize();
     }
 
     void handleNextPiece()
@@ -119,38 +141,71 @@ private:
         next = snake.nextHead();
     
 
-        if(apple!=nullptr)
+        switch(game_board.getCharAt(next))
         {
-            switch(board.getCharAt(next))
-            {
-                case 'A':
-                    destroyApple();
-                    break;
-                case ' ':
-                    board.add(Empty(snake.tail()));
-                    snake.popPiece();
-                    break;
-                default: // collision
-                    game_over=true;
-                    break;
-            }
+            case 'A':
+                eatApple();
+                break;
+            case 'P':
+                eatPoison();
+                break;
+            case ' ':
+                game_board.add(Empty(snake.tail()));
+                snake.popPiece();
+                break;
+            default: // collision
+                game_over=true;
+                break;
         }
-        board.add(next);
+        
+        game_board.add(next);
         snake.addPiece(next);
     }
 
     void createApple()
     {
         int y, x;
-        board.getEmptyCoordinates(y, x);
+        game_board.getEmptyCoordinates(y, x);
         apple = new Apple(y, x);
-        board.add(*apple);
+        game_board.add(*apple);
     }
 
-    void destroyApple()
+    void createPoison()
+    {
+        int y, x;
+        game_board.getEmptyCoordinates(y, x);
+        poison = new Poison(y, x);
+        game_board.add(*poison);
+    }
+
+    void eatApple()
     {
         delete apple;
         apple = nullptr;
+
+        snake.updateLength(true);
+        score_board.updateLen(snake.getLength());
+        mission_board.updateLen(score_board.getLen());
+
+        score_board.updatePlus();
+        mission_board.updatePlus(score_board.getPlus());
+    }
+
+    void eatPoison()
+    {
+        delete poison;
+        poison = nullptr;
+
+        game_board.add(Empty(snake.tail()));
+        snake.popPiece();
+        game_board.add(Empty(snake.tail()));
+        snake.popPiece();
+
+        snake.updateLength(false);
+        score_board.updateLen(snake.getLength());
+
+        score_board.updateMinus();
+        mission_board.updateMinus(score_board.getMinus());
     }
     
 };

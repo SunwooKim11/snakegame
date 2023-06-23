@@ -27,12 +27,25 @@ private:
     std::queue<SnakePiece> prev_pieces;
     Direction curr_direction;
     Direction prev_direction;
+    int length;
 
 public:
     Snake()
     {
         prev_direction = left;
         curr_direction = right;
+        length = 3;
+    }
+
+    void updateLength(bool plus)
+    {
+        if(plus) length++;
+        else length--;
+    }
+    
+    int getLength()
+    {
+        return length;
     }
 
     void addPiece(SnakePiece piece)

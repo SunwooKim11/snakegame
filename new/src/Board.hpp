@@ -1,30 +1,43 @@
 #pragma once
 
-#include<cstdlib>
-#include<time.h>
 #include "Drawable.hpp"
-
+#include <fstream>
 class Board
 {
-private:
+protected:
     WINDOW *board_win;
     int height, width;
     int startY, startX;
+    int endY, endX;
 public: 
-    Board(int height = 17, int width = 17*2.5){
-        construct(height, width);
+    Board(){};
+    Board(int height, int width, int startY = 0, int startX = 0){
+        
+        int xMax, yMax;            
+        getmaxyx(stdscr, yMax, xMax);
+        
+        if(!startY) startY = yMax/10;
+        if(!startX) startX = xMax/20;
+
+        construct(height, width, startY, startX);
+        
+        std::ofstream file("test.txt");
+        if(file.is_open()) {
+            file << "Create Board.\n";  
+            file.close();
+        } 
+
     };
+
+    // ~Board(){
+    //     delwin(board_win);
+    // }
 
     void initialize(){
         clear();
         refresh();
     }
     
-
-    // y, x를 ref로 받아. empty 한 좌표를 y, x에 할당시킴. 
-    void getEmptyCoordinates(int &y, int &x){
-        while ((mvwinch(board_win, y = rand() % height, x = rand() % width)) != ' ');       
-    }
 
     void addBorder(){
         box(board_win, 0, 0);
@@ -38,7 +51,6 @@ public:
     void addAt(int y, int x, chtype ch){
         mvwaddch(board_win, y, x, ch);  // win에서 커서를 이동하고, 문자를 붙여넣는다.
     }
-    
      
     void clear(){
         wclear(board_win);
@@ -48,35 +60,36 @@ public:
     void refresh(){
         wrefresh(board_win);
     }
-
-    chtype getInput(){
-        return wgetch(board_win);
-    }
-
     void setTimeout(int timeout){
         wtimeout(board_win, timeout);
     }
 
-    chtype getCharAt(Drawable obj)
+    int getEndY()
     {
-        return mvwinch(board_win, obj.getY(), obj.getX());
+        return endY;
     }
 
-private: 
-    void construct(int height, int width){
-        int xMax, yMax;
-        getmaxyx(stdscr, yMax, xMax);
-        board_win = newwin(height, width, (yMax / 2) - (height / 2), (xMax / 2) - (width / 2));
+    int getEndX(){
+        return endX;
+    }
+
+protected: 
+    void construct(int height, int width, int startY, int startX){
+        
+        board_win = newwin(height, width, startY, startX);
 
         initialize();
 
         this->height = height;
         this->width = width;
+        this->startY = startY;
+        this->startX = startX;
 
-        // Add timeout
-        setTimeout(500);
+        this->endY = startY + height;
+        this->endX = startX + width;
+
         keypad(board_win, true);
-
+        setTimeout(300);
     }
 };
 

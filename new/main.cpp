@@ -2,9 +2,9 @@
 #include "src/Board.hpp"
 #include "src/Snakegame.hpp"
 
-#define BOARD_DIM 17
-#define BOARD_ROWS BOARD_DIM
-#define BOARD_COLS BOARD_DIM * 2.5
+// #define BOARD_DIM 40
+// #define BOARD_ROWS BOARD_DIM
+// #define BOARD_COLS BOARD_DIM * 2.5
 
 int main(int argc, char *argv){
     initscr();
@@ -12,7 +12,7 @@ int main(int argc, char *argv){
     noecho();
     curs_set(0);
 
-    Snakegame game(BOARD_ROWS, BOARD_COLS);
+    Snakegame game;
     
 
     while (!game.isOver())
