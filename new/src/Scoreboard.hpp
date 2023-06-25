@@ -20,12 +20,20 @@ public:
     {
 
     };
-    void initialize()
+    void initialize(int stage)
     {
-        clear();
+        initValue(stage);
+        clear(stage);
         redraw();
     }
-    void clear()
+    void initValue(int stage)
+    {
+        curr_len = 3;
+        plus_item = 0;
+        minus_item = 0;
+        gate = 0;
+    }
+    void clear(int stage)
     {
         Board::clear();
         mvwprintw(board_win, 0, 1, "Score Board");

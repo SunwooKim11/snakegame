@@ -1,6 +1,8 @@
 #pragma once 
 #include <ncurses.h>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include "Gameboard.hpp"
 #include "Missionboard.hpp"
 #include "Scoreboard.hpp"
@@ -14,9 +16,13 @@
 #define SUB_DIMS 10
 #define SUB_ROWS SUB_DIMS
 #define SUB_COLS SUB_DIMS * 4
+#define STAGE 4
+
 
 class Snakegame
 {
+public:
+    const int NUM_STAGE = 4;
 private:
     Gameboard game_board;
     Scoreboard score_board;
@@ -24,9 +30,12 @@ private:
     
     Apple *apple = nullptr;
     Poison *poison = nullptr;
+    bool stage_over;
     bool game_over;
     Snake snake;
-    SnakePiece next = SnakePiece(1, 1);
+    SnakePiece next;
+
+    int stage;
 
 public:
     Snakegame()
@@ -34,9 +43,7 @@ public:
         game_board = Gameboard();
         score_board = Scoreboard(SUB_ROWS, SUB_COLS, 0, game_board.getEndX());
         mission_board = Missionboard(SUB_ROWS, SUB_COLS, game_board.getEndY()-SUB_ROWS, game_board.getEndX());
-        
-    
-        initialize();
+        srand(time(NULL)); 
     };
 
     void processInput()
@@ -78,14 +85,19 @@ public:
         if(direct)
         {
             game_over=snake.setDirection(direct);
+            
         }        
     }
 
     void updateState()
     {
-        handleNextPiece(); 
+        handleNextPiece();
+        updateMissionBoard();
+        stage_over = mission_board.updateMission();
         if(apple==nullptr) createApple(); 
         if(poison==nullptr) createPoison(); 
+        
+        
     }
 
     void redraw()
@@ -95,16 +107,42 @@ public:
         mission_board.redraw();
     }
 
-    bool isOver()
+    bool isStageOver()
     {
+        return stage_over;
+    }
+    
+    bool isGameOver(){
         return game_over;
     }
 
+    void setStage(int stage)
+    {   
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        this->stage = stage;
+        snake.initialize();
+        next = snake.initHead(2, 2);
+
+        if(apple!=nullptr) {
+            delete apple;
+            apple = nullptr;
+        }
+        if(poison!=nullptr){
+            delete poison;
+            poison = nullptr;
+        }
+        
+        initialize();
+    };
+
+    int getStage()
+    {
+        return STAGE;
+    };
 
     ~Snakegame()
     {
-        delete apple;
-        delete poison;
+        
         // delete &game_board;
         // delete &game_board;
         // delete &score_board;
@@ -112,11 +150,14 @@ public:
     };
 
 private:
+    
     void initialize()
     {
-        game_board.initialize();
+        game_board.initialize(stage);
+        stage_over = false;
         game_over = false;
-        srand(time(NULL)); 
+
+
         // init snake
         snake.setDirection(down);
         game_board.add(next);
@@ -125,6 +166,7 @@ private:
         next = snake.nextHead();
         game_board.add(next);
         snake.addPiece(next);
+
         next = snake.nextHead();
         game_board.add(next);
         snake.addPiece(next);
@@ -132,8 +174,8 @@ private:
         if(apple==nullptr) createApple(); 
         if(poison==nullptr) createPoison(); 
 
-        score_board.initialize();
-        mission_board.initialize();
+        score_board.initialize(stage);
+        mission_board.initialize(stage);
     }
 
     void handleNextPiece()
@@ -155,6 +197,7 @@ private:
                 break;
             default: // collision
                 game_over=true;
+                stage_over = true;
                 break;
         }
         
@@ -185,10 +228,8 @@ private:
 
         snake.updateLength(true);
         score_board.updateLen(snake.getLength());
-        mission_board.updateLen(score_board.getLen());
-
         score_board.updatePlus();
-        mission_board.updatePlus(score_board.getPlus());
+
     }
 
     void eatPoison()
@@ -205,7 +246,13 @@ private:
         score_board.updateLen(snake.getLength());
 
         score_board.updateMinus();
+    }
+
+    void updateMissionBoard()
+    {
+        mission_board.updatePlus(score_board.getPlus());
         mission_board.updateMinus(score_board.getMinus());
+        mission_board.updateLen(score_board.getLen());
     }
     
 };

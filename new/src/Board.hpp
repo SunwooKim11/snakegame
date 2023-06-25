@@ -57,6 +57,7 @@ public:
         addBorder();
     }
 
+
     void refresh(){
         wrefresh(board_win);
     }

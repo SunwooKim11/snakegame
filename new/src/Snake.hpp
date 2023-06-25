@@ -3,6 +3,7 @@
 #include "Drawable.hpp"
 #include <queue>
 
+#define LEN 3
 
 enum Direction{
     up = -1,
@@ -34,7 +35,16 @@ public:
     {
         prev_direction = left;
         curr_direction = right;
-        length = 3;
+    }
+
+    void initialize()
+    {
+        length = LEN;
+        while(prev_pieces.size() > 0)
+        {
+            this->popPiece();
+        }
+        // return this->initHead();
     }
 
     void updateLength(bool plus)
@@ -86,6 +96,10 @@ public:
         prev_direction = curr_direction;
         curr_direction = d;
         return false;
+    }
+    SnakePiece initHead(int y = 1, int x = 1)
+    {
+        return SnakePiece(y, x);
     }
     SnakePiece nextHead()
     {

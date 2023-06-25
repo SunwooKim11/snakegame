@@ -15,18 +15,26 @@ int main(int argc, char *argv){
     Snakegame game;
     
 
-    while (!game.isOver())
-    {
-        // 1. get input from user
-        game.processInput();
+    for (int i=0; i<game.getStage(); i++)
+    {   
+        game.setStage(i);
+        while (!game.isStageOver())
+        {
+            // 1. get input from user
+            game.processInput();
 
-        // 2. update game status ex) snake, item / score board
-        game.updateState();
+            // 2. update game status ex) snake, item / score board
+            game.updateState();
 
-        // 3. update windows
-        game.redraw();
+            // 3. update windows
+            game.redraw();
 
-        // 4. go to 1 unless gameover
+            // 4. go to 1 unless gameover
+        }
+        
+        if(game.isGameOver()){
+            break;
+        }
     }
     
 
