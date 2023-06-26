@@ -13,7 +13,7 @@ public:
     Board(){};
     Board(int height, int width, int startY = 0, int startX = 0){
         
-        int xMax, yMax;            
+        int xMax, yMax;             
         getmaxyx(stdscr, yMax, xMax);
         
         if(!startY) startY = yMax/10;

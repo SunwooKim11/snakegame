@@ -1,14 +1,21 @@
 #pragma once
 
-#include<cstdlib>
 #include<fstream>
-#include<string>
-// #include<iostream>
+#include<sstream>
+#include<iostream>
+#include<vector>
+#include<map>
+#include<algorithm>
 #include "Board.hpp"
 
 #define GAME_DIMS 20
 #define GAME_ROWS GAME_DIMS
 #define GAME_COLS GAME_DIMS * 2.5
+
+using std::cout; using std::cerr;
+using std::endl; using std::string;
+using std::ifstream; using std::ostringstream;
+using std::istringstream;
 
 class Gameboard : public Board
 {
@@ -22,8 +29,9 @@ public:
     void initialize(int stage)
     {
         clear(stage);
+        refresh();
         loadStage(stage);
-        Board::refresh();
+        refresh();
     }
 
     void clear(int stage)
@@ -33,23 +41,37 @@ public:
         // for(int i=0; i<)
     }
 
+    
+    // ref C++ csv 파일 읽기
+    //https://www.delftstack.com/ko/howto/cpp/read-csv-file-in-cpp/
     void loadStage(int stage)
-    {   
-        int delim = 0;
-        std::fstream fs;
-        fs.open("normal.csv", std::ios::in);
-        while (!fs.eof())
-        {
-        
-            //2. std::getline.
-            std::string coord;
-            std::getline(fs, coord);
-            delim = coord.find(",");
-            addAt(std::stoi(coord.substr(0, delim)), std::stoi(coord.substr(delim+1)), 'O');  
+    {
+        int y, x;   
+        string filename("normal.csv");
+        string file_contents;
+        char delimiter = ',';
+
+        file_contents = readFileIntoString(filename);
+
+        istringstream sstream(file_contents);
+        std::vector<string> items;
+        string record;
+
+        while (std::getline(sstream, record)) {
+            istringstream line(record);
+            while (std::getline(line, record, delimiter)) {
+                record.erase(std::remove_if(record.begin(), record.end(), isspace), record.end());
+                items.push_back(record);
+            }
+            y = std::stoi(items[0]);
+            x = std::stoi(items[1]);
+            // addAt(y, x, 'O');
+            mvwprintw(board_win, y, x, "0");
+            items.clear();
         }
-        fs.close();    
 
     }
+
     // y, x를 ref로 받아. empty 한 좌표를 y, x에 할당시킴. 
     void getEmptyCoordinates(int &y, int &x){
         while ((mvwinch(board_win, y = rand() % height, x = rand() % width)) != ' ');       
@@ -67,6 +89,20 @@ public:
 
     
 private: 
+    string readFileIntoString(const string& path) 
+    {    
+        auto ss = ostringstream{};
+        std::ifstream ifs;
+        ifs.open ("normal.csv", std::ifstream::in); 
+
+        // if (ifs.good()) {
+        //     cerr << "Could not open the file - '"
+        //          << path << "'" << endl;
+        //     exit(EXIT_FAILURE);
+        // }
+        ss << ifs.rdbuf();
+        return ss.str();
+    }
 
 };
 
